@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Curta Mais Poa 2.0 – protótipo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--lago:#0E3B4F;--agua:#1C7C86;--nevoa:#EAF3F1;--sol:#FF8A3D;--mag:#E0457B;--folha:#4FB286;--amb:#F2B33D}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:"DM Sans",system-ui,sans-serif;background:#071f2b;display:grid;place-items:center;color:var(--lago)}
+#app{position:relative;width:100%;max-width:430px;height:100%;max-height:900px;background:var(--nevoa);overflow:hidden;display:flex;flex-direction:column}
+h1,h2{font-family:Fraunces,Georgia,serif}
+#map{flex:1;width:100%;display:block;touch-action:manipulation}
+.top{position:absolute;top:0;left:0;right:0;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 8px;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.top>*{pointer-events:auto}
+.brand{background:var(--lago);color:#fff;border-radius:16px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.brand h1{font-size:18px}.brand span{font-size:12px;opacity:.8}
+.modes{display:flex;gap:6px}
+.modes button{flex:1;min-height:44px;border:0;border-radius:14px;background:#fff;color:var(--lago);font:600 13px inherit;font-family:inherit;box-shadow:0 2px 8px #0e3b4f33;cursor:pointer}
+.modes button[aria-pressed=true]{background:var(--agua);color:#fff}
+.card{position:absolute;left:12px;right:12px;bottom:84px;background:#fff;border-radius:20px;padding:16px;box-shadow:0 10px 30px #0e3b4f40;transform:translateY(140%);transition:transform .25s}
+.card.on{transform:none}
+.card h2{font-size:20px;margin-bottom:4px}
+.bar{height:10px;border-radius:6px;background:#dde9e6;margin:10px 0 4px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px}
+.ev{margin-top:10px;padding:10px 12px;border-radius:12px;background:linear-gradient(90deg,var(--sol),var(--mag));color:#fff;font-weight:600;font-size:14px}
+.row{display:flex;gap:8px;margin-top:12px}
+.btn{flex:1;min-height:44px;border:0;border-radius:14px;font:600 14px inherit;font-family:inherit;cursor:pointer;background:var(--agua);color:#fff}
+.btn.alt{background:var(--nevoa);color:var(--lago)}
+nav{display:flex;background:var(--lago);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1;min-height:56px;border:0;background:none;color:#9fc4c8;font:12px inherit;font-family:inherit;display:grid;place-items:center;gap:2px;cursor:pointer}
+nav button[aria-current=page]{color:#fff}
+nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
+#onb{position:absolute;inset:0;background:var(--lago);color:#fff;padding:32px 22px;display:flex;flex-direction:column;gap:14px;z-index:5}
+#onb h1{font-size:30px;line-height:1.1}
+#onb p{opacity:.85}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:44px;padding:0 16px;border-radius:22px;border:1.5px solid #ffffff55;background:none;color:#fff;font:600 14px inherit;font-family:inherit;cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--sol);border-color:var(--sol);color:var(--lago)}
+#onb .btn{background:var(--sol);color:var(--lago);margin-top:auto;flex:none}
+button:focus-visible{outline:3px solid var(--sol);outline-offset:2px}
+.pulse{animation:p 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes p{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.4);opacity:0}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}.card{transition:none}}
+</style></head>
+<body><div id="app">
+
+<section id="onb">
+ <h1>Porto Alegre, do seu jeito.</h1>
+ <p>Escolha o que você curte. Vamos destacar no mapa o que está acontecendo agora perto de você.</p>
+ <div class="chips" id="chips"></div>
+ <button class="btn" id="go">Explorar o mapa</button>
+</section>
+
+<svg id="map" viewBox="0 0 390 700" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Mapa estilizado do Centro de Porto Alegre e do Guaíba">
+ <defs>
+  <linearGradient id="ag" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0E3B4F"/><stop offset="1" stop-color="#1C7C86"/></linearGradient>
+  <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8A3D" stop-opacity=".55"/><stop offset="1" stop-color="#FF8A3D" stop-opacity="0"/></linearGradient>
+ </defs>
+ <rect width="390" height="700" fill="#EAF3F1"/>
+ <path d="M0 0H120C150 120 100 240 135 340C160 430 110 560 150 700H0Z" fill="url(#ag)"/>
+ <path d="M0 0H120C150 120 100 240 135 340C160 430 110 560 150 700H0Z" fill="url(#ceu)"/>
+ <path d="M135 340C160 430 110 560 150 700" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="3"/>
+ <g id="ruas" stroke="#fff" stroke-width="9" stroke-linecap="round"></g>
+ <g id="blocos"></g>
+ <g id="pois"></g>
+ <g id="rota"></g>
+ <g id="eu" transform="translate(220 560)"><circle r="16" fill="#1C7C86" fill-opacity=".25"/><circle r="8" fill="#1C7C86" stroke="#fff" stroke-width="3"/></g>
+</svg>
+
+<div class="top">
+ <div class="brand"><h1>Curta Mais Poa</h1><span id="clima">Pôr do sol às 18h52 (exemplo)</span></div>
+ <div class="modes" id="modes"></div>
+</div>
+
+<div class="card" id="card" aria-live="polite"></div>
+
+<nav id="nav"></nav>
+</div>
+
+<script>
+const C={tr:'#4FB286',md:'#F2B33D',lt:'#E0457B'};
+const INT=['Gastronomia','Cultura','Música ao vivo','Pôr do sol','Em família','Gastando pouco'];
+const POIS=[
+ {id:'mercado',n:'Mercado Público',x:260,y:330,t:'Gastronomia',l:.72,d:'Bancas de comida, café e cuia desde 1869.',int:['Gastronomia']},
+ {id:'gaso',n:'Usina do Gasômetro',x:165,y:420,t:'Cultura',l:.5,d:'Cultura à beira do Guaíba.',ev:'Música ao vivo no pôr do sol (exemplo)',int:['Cultura','Música ao vivo','Pôr do sol']},
+ {id:'orla',n:'Orla do Guaíba',x:150,y:520,t:'Natureza',l:.38,d:'Calçadão para caminhar, pedalar e ver o sol baixar.',int:['Pôr do sol','Em família']},
+ {id:'spedro',n:'Theatro São Pedro',x:250,y:230,t:'Cultura',l:.3,d:'Teatro histórico na Praça da Matriz.',ev:'Espetáculo hoje às 20h (exemplo)',int:['Cultura']},
+ {id:'matriz',n:'Praça da Matriz',x:235,y:190,t:'Cultura',l:.2,d:'Catedral, palácios e Memorial do RS.',int:['Cultura','Gastando pouco']},
+ {id:'rua',n:'Café da Rua da Praia',x:300,y:270,t:'Gastronomia',l:.55,d:'Café e doces no calçadão do Centro.',int:['Gastronomia','Gastando pouco']}
+];
+const MODOS={pe:['A pé',1],carro:['Carro',3.2],uber:['Uber',3.2],pat:['Patinete',2]};
+let modo='pe',sel=new Set(),me={x:220,y:560},tab=0;
+const $=s=>document.querySelector(s);
+const ns=(t,a)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',t);for(const k in a)e.setAttribute(k,a[k]);return e};
+
+// onboarding
+INT.forEach(i=>{const b=document.createElement('button');b.textContent=i;b.setAttribute('aria-pressed','false');
+ b.onclick=()=>{sel.has(i)?sel.delete(i):sel.add(i);b.setAttribute('aria-pressed',sel.has(i));};$('#chips').append(b)});
+$('#go').onclick=()=>{$('#onb').remove();draw()};
+
+// ruas e quarteirões
+for(let i=0;i<7;i++){$('#ruas').append(ns('line',{x1:150+i*40,y1:0,x2:130+i*40,y2:700}))}
+for(let j=0;j<12;j++){$('#ruas').append(ns('line',{x1:130,y1:30+j*58,x2:390,y2:30+j*58}))}
+for(let i=0;i<6;i++)for(let j=0;j<11;j++)if((i*7+j*3)%4)$('#blocos').append(ns('rect',{x:160+i*40-j*1.7,y:40+j*58,width:26,height:38,rx:4,fill:'#cfe2de'}));
+
+// modos
+Object.entries(MODOS).forEach(([k,[n]])=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('aria-pressed',k===modo);
+ b.onclick=()=>{modo=k;[...$('#modes').children].forEach(c=>c.setAttribute('aria-pressed',c===b))};$('#modes').append(b)});
+
+// nav
+const IC=['<path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>','<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>','<path d="M4 6h16M4 12h16M4 18h10"/>','<path d="M12 21l-8-8a5 5 0 117-7 5 5 0 117 7z"/>','<circle cx="12" cy="8" r="4"/><path d="M4 21c0-5 4-7 8-7s8 2 8 7"/>'];
+['Mapa','Agora','Roteiros','Salvos','Perfil'].forEach((n,i)=>{const b=document.createElement('button');b.innerHTML=`<svg viewBox="0 0 24 24">${IC[i]}</svg>${n}`;
+ b.onclick=()=>{tab=i;[...$('#nav').children].forEach(c=>c.removeAttribute('aria-current'));b.setAttribute('aria-current','page');if(i===1)agora();else if(i)msg(n);else $('#card').classList.remove('on')};
+ if(!i)b.setAttribute('aria-current','page');$('#nav').append(b)});
+
+const match=p=>p.int.some(i=>sel.has(i));
+const cor=l=>l<.4?C.tr:l<.65?C.md:C.lt;
+function draw(){const g=$('#pois');g.innerHTML='';
+ POIS.forEach(p=>{const e=ns('g',{transform:`translate(${p.x} ${p.y})`,style:'cursor:pointer',tabindex:0,role:'button','aria-label':p.n});
+  if(p.ev)e.append(ns('circle',{r:14,fill:'#FF8A3D',class:'pulse'}));
+  if(match(p))e.append(ns('circle',{r:19,fill:'none',stroke:'#FF8A3D','stroke-width':3,'stroke-dasharray':'5 4'}));
+  e.append(ns('circle',{r:13,fill:p.ev?'#E0457B':'#0E3B4F',stroke:'#fff','stroke-width':3}));
+  const t=ns('text',{y:4,'text-anchor':'middle',fill:'#fff','font-size':11,'font-weight':700});t.textContent=p.ev?'★':p.n[0];e.append(t);
+  e.onclick=ev=>{ev.stopPropagation();abrir(p)};e.onkeydown=ev=>{if(ev.key==='Enter')abrir(p)};g.append(e)})}
+
+function abrir(p){const pct=Math.round(p.l*100),est=p.l<.4?'Tranquilo':p.l<.65?'Movimentado':'Lotado';
+ const dist=Math.round(Math.hypot(p.x-me.x,p.y-me.y)*1.6),min=Math.max(1,Math.round(dist/(MODOS[modo][1]*80)));
+ $('#card').innerHTML=`<h2>${p.n}</h2><div>${p.d}</div>
+ <div class="bar"><i style="width:${pct}%;background:${cor(p.l)}"></i></div>
+ <div style="font-size:13px"><b>${est}</b> agora (${pct}% da lotação, dado de exemplo)</div>
+ ${p.ev?`<div class="ev">Acontecendo agora: ${p.ev}</div>`:''}
+ <div class="row"><button class="btn" id="ir">Ir ${MODOS[modo][0].toLowerCase()} · ${min} min</button><button class="btn alt" id="fx">Fechar</button></div>`;
+ $('#card').classList.add('on');$('#fx').onclick=()=>$('#card').classList.remove('on');$('#ir').onclick=()=>ir(p)}
+
+function ir(p){$('#card').classList.remove('on');$('#rota').innerHTML='';
+ $('#rota').append(ns('line',{x1:me.x,y1:me.y,x2:p.x,y2:p.y,stroke:'#FF8A3D','stroke-width':5,'stroke-dasharray':'2 9','stroke-linecap':'round'}));
+ const a={...me},sp=MODOS[modo][1]*1.4,eu=$('#eu');
+ (function f(){const dx=p.x-a.x,dy=p.y-a.y,d=Math.hypot(dx,dy);
+  if(d<sp){me={x:p.x,y:p.y};eu.setAttribute('transform',`translate(${p.x} ${p.y+22})`);$('#rota').innerHTML='';abrir(p);return}
+  a.x+=dx/d*sp;a.y+=dy/d*sp;eu.setAttribute('transform',`translate(${a.x} ${a.y})`);requestAnimationFrame(f)})()}
+
+function agora(){const l=POIS.filter(p=>p.ev);
+ $('#card').innerHTML=`<h2>Agora em Porto Alegre</h2>`+l.map(p=>`<div class="ev" style="margin-top:8px">${p.n}: ${p.ev}</div>`).join('')+`<div class="row"><button class="btn alt" id="fx">Fechar</button></div>`;
+ $('#card').classList.add('on');$('#fx').onclick=()=>$('#card').classList.remove('on')}
+function msg(n){$('#card').innerHTML=`<h2>${n}</h2><div>Tela prevista para a próxima fase do projeto.</div><div class="row"><button class="btn alt" id="fx">Fechar</button></div>`;
+ $('#card').classList.add('on');$('#fx').onclick=()=>$('#card').classList.remove('on')}
+$('#map').onclick=()=>$('#card').classList.remove('on');
+draw();
+</script></body></html>
