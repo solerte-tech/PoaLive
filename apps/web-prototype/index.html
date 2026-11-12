@@ -1,150 +1,180 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Curta Mais Poa 2.0 – protótipo</title>
+<meta name="color-scheme" content="dark">
+<title>Curta Mais Poa 2.0</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 :root{--lago:#0E3B4F;--agua:#1C7C86;--nevoa:#EAF3F1;--sol:#FF8A3D;--mag:#E0457B;--folha:#4FB286;--amb:#F2B33D}
 *{box-sizing:border-box;margin:0}
-html,body{height:100%}
-body{font-family:"DM Sans",system-ui,sans-serif;background:#071f2b;display:grid;place-items:center;color:var(--lago)}
-#app{position:relative;width:100%;max-width:430px;height:100%;max-height:900px;background:var(--nevoa);overflow:hidden;display:flex;flex-direction:column}
+html,body{height:100%;overflow:hidden}
+body{font-family:"DM Sans",system-ui,sans-serif;color:var(--lago);background:var(--lago)}
+#app{position:relative;height:100%}
+#stage{position:absolute;inset:0;background:linear-gradient(#0E3B4F 0%,#1C7C86 38%,#F2A36B 62%,#FF8A3D 72%,#31515c 72%)}
+#stage canvas{display:block;touch-action:none}
+#lbl{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.pin{position:absolute;left:0;top:0;pointer-events:auto;display:flex;align-items:center;gap:6px;border:0;border-radius:20px;background:#fff;color:var(--lago);padding:4px 10px 4px 6px;font:600 12px "DM Sans",sans-serif;box-shadow:0 3px 10px #0008;cursor:pointer;white-space:nowrap;will-change:transform}
+.pin i{width:14px;height:14px;border-radius:50%;display:block;border:2px solid #fff;box-shadow:0 0 0 1px #0004}
+.pin.ev{background:linear-gradient(90deg,var(--sol),var(--mag));color:#fff}
+.pin.mine{outline:3px solid var(--sol);outline-offset:2px}
 h1,h2{font-family:Fraunces,Georgia,serif}
-#map{flex:1;width:100%;display:block;touch-action:manipulation}
-.top{position:absolute;top:0;left:0;right:0;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 8px;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.top>*{pointer-events:auto}
-.brand{background:var(--lago);color:#fff;border-radius:16px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
-.brand h1{font-size:18px}.brand span{font-size:12px;opacity:.8}
+.top{position:absolute;top:0;left:0;right:0;max-width:480px;padding:calc(12px + env(safe-area-inset-top,0px)) 12px 0;display:flex;flex-direction:column;gap:8px}
+.brand{background:#0E3B4Fee;color:#fff;border-radius:16px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(8px)}
+.brand h1{font-size:18px}.brand span{font-size:12px;opacity:.85}
 .modes{display:flex;gap:6px}
-.modes button{flex:1;min-height:44px;border:0;border-radius:14px;background:#fff;color:var(--lago);font:600 13px inherit;font-family:inherit;box-shadow:0 2px 8px #0e3b4f33;cursor:pointer}
-.modes button[aria-pressed=true]{background:var(--agua);color:#fff}
-.card{position:absolute;left:12px;right:12px;bottom:84px;background:#fff;border-radius:20px;padding:16px;box-shadow:0 10px 30px #0e3b4f40;transform:translateY(140%);transition:transform .25s}
+.modes button{flex:1;min-height:44px;border:0;border-radius:14px;background:#fff;color:var(--lago);font:600 13px "DM Sans",sans-serif;box-shadow:0 2px 8px #0006;cursor:pointer}
+.modes button[aria-pressed=true]{background:var(--sol);color:var(--lago)}
+.card{position:absolute;left:12px;right:12px;max-width:456px;bottom:calc(80px + env(safe-area-inset-bottom,0px));background:#fff;border-radius:20px;padding:16px;box-shadow:0 10px 30px #0008;transform:translateY(160%);transition:transform .25s}
 .card.on{transform:none}
 .card h2{font-size:20px;margin-bottom:4px}
 .bar{height:10px;border-radius:6px;background:#dde9e6;margin:10px 0 4px;overflow:hidden}
 .bar i{display:block;height:100%;border-radius:6px}
 .ev{margin-top:10px;padding:10px 12px;border-radius:12px;background:linear-gradient(90deg,var(--sol),var(--mag));color:#fff;font-weight:600;font-size:14px}
 .row{display:flex;gap:8px;margin-top:12px}
-.btn{flex:1;min-height:44px;border:0;border-radius:14px;font:600 14px inherit;font-family:inherit;cursor:pointer;background:var(--agua);color:#fff}
+.btn{flex:1;min-height:44px;border:0;border-radius:14px;font:600 14px "DM Sans",sans-serif;cursor:pointer;background:var(--agua);color:#fff}
 .btn.alt{background:var(--nevoa);color:var(--lago)}
-nav{display:flex;background:var(--lago);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
-nav button{flex:1;min-height:56px;border:0;background:none;color:#9fc4c8;font:12px inherit;font-family:inherit;display:grid;place-items:center;gap:2px;cursor:pointer}
-nav button[aria-current=page]{color:#fff}
+nav{position:absolute;left:0;right:0;bottom:0;display:flex;background:var(--lago);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1;min-height:56px;border:0;background:none;color:#9fc4c8;font:12px "DM Sans",sans-serif;display:grid;place-items:center;gap:2px;cursor:pointer}
+nav button[aria-current=page]{color:var(--sol)}
 nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
-#onb{position:absolute;inset:0;background:var(--lago);color:#fff;padding:32px 22px;display:flex;flex-direction:column;gap:14px;z-index:5}
-#onb h1{font-size:30px;line-height:1.1}
-#onb p{opacity:.85}
+#hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));background:#0E3B4Fcc;color:#fff;font-size:12px;padding:6px 12px;border-radius:14px;pointer-events:none}
+#onb{position:absolute;inset:0;background:var(--lago);color:#fff;padding:calc(32px + env(safe-area-inset-top,0px)) 22px 28px;display:flex;flex-direction:column;gap:14px;z-index:5;max-width:520px;margin:auto}
+#onb h1{font-size:32px;line-height:1.1}#onb p{opacity:.85}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chips button{min-height:44px;padding:0 16px;border-radius:22px;border:1.5px solid #ffffff55;background:none;color:#fff;font:600 14px inherit;font-family:inherit;cursor:pointer}
+.chips button{min-height:44px;padding:0 16px;border-radius:22px;border:1.5px solid #ffffff66;background:none;color:#fff;font:600 14px "DM Sans",sans-serif;cursor:pointer}
 .chips button[aria-pressed=true]{background:var(--sol);border-color:var(--sol);color:var(--lago)}
 #onb .btn{background:var(--sol);color:var(--lago);margin-top:auto;flex:none}
 button:focus-visible{outline:3px solid var(--sol);outline-offset:2px}
-.pulse{animation:p 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
-@keyframes p{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.4);opacity:0}}
-@media(prefers-reduced-motion:reduce){.pulse{animation:none}.card{transition:none}}
 </style></head>
 <body><div id="app">
-
-<section id="onb">
- <h1>Porto Alegre, do seu jeito.</h1>
- <p>Escolha o que você curte. Vamos destacar no mapa o que está acontecendo agora perto de você.</p>
- <div class="chips" id="chips"></div>
- <button class="btn" id="go">Explorar o mapa</button>
-</section>
-
-<svg id="map" viewBox="0 0 390 700" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Mapa estilizado do Centro de Porto Alegre e do Guaíba">
- <defs>
-  <linearGradient id="ag" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0E3B4F"/><stop offset="1" stop-color="#1C7C86"/></linearGradient>
-  <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8A3D" stop-opacity=".55"/><stop offset="1" stop-color="#FF8A3D" stop-opacity="0"/></linearGradient>
- </defs>
- <rect width="390" height="700" fill="#EAF3F1"/>
- <path d="M0 0H120C150 120 100 240 135 340C160 430 110 560 150 700H0Z" fill="url(#ag)"/>
- <path d="M0 0H120C150 120 100 240 135 340C160 430 110 560 150 700H0Z" fill="url(#ceu)"/>
- <path d="M135 340C160 430 110 560 150 700" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="3"/>
- <g id="ruas" stroke="#fff" stroke-width="9" stroke-linecap="round"></g>
- <g id="blocos"></g>
- <g id="pois"></g>
- <g id="rota"></g>
- <g id="eu" transform="translate(220 560)"><circle r="16" fill="#1C7C86" fill-opacity=".25"/><circle r="8" fill="#1C7C86" stroke="#fff" stroke-width="3"/></g>
-</svg>
-
-<div class="top">
- <div class="brand"><h1>Curta Mais Poa</h1><span id="clima">Pôr do sol às 18h52 (exemplo)</span></div>
- <div class="modes" id="modes"></div>
-</div>
-
+<div id="stage"></div><div id="lbl"></div>
+<div class="top"><div class="brand"><h1>Curta Mais Poa</h1><span>Pôr do sol às 18h52 (exemplo)</span></div><div class="modes" id="modes"></div></div>
+<div id="hint">Arraste para girar a câmera. Toque na rua para andar.</div>
 <div class="card" id="card" aria-live="polite"></div>
-
 <nav id="nav"></nav>
+<section id="onb"><h1>Porto Alegre, do seu jeito.</h1><p>Escolha o que você curte. Vamos destacar no mapa o que está acontecendo agora perto de você.</p><div class="chips" id="chips"></div><button class="btn" id="go">Explorar o mapa</button></section>
 </div>
-
 <script>
-const C={tr:'#4FB286',md:'#F2B33D',lt:'#E0457B'};
-const INT=['Gastronomia','Cultura','Música ao vivo','Pôr do sol','Em família','Gastando pouco'];
-const POIS=[
- {id:'mercado',n:'Mercado Público',x:260,y:330,t:'Gastronomia',l:.72,d:'Bancas de comida, café e cuia desde 1869.',int:['Gastronomia']},
- {id:'gaso',n:'Usina do Gasômetro',x:165,y:420,t:'Cultura',l:.5,d:'Cultura à beira do Guaíba.',ev:'Música ao vivo no pôr do sol (exemplo)',int:['Cultura','Música ao vivo','Pôr do sol']},
- {id:'orla',n:'Orla do Guaíba',x:150,y:520,t:'Natureza',l:.38,d:'Calçadão para caminhar, pedalar e ver o sol baixar.',int:['Pôr do sol','Em família']},
- {id:'spedro',n:'Theatro São Pedro',x:250,y:230,t:'Cultura',l:.3,d:'Teatro histórico na Praça da Matriz.',ev:'Espetáculo hoje às 20h (exemplo)',int:['Cultura']},
- {id:'matriz',n:'Praça da Matriz',x:235,y:190,t:'Cultura',l:.2,d:'Catedral, palácios e Memorial do RS.',int:['Cultura','Gastando pouco']},
- {id:'rua',n:'Café da Rua da Praia',x:300,y:270,t:'Gastronomia',l:.55,d:'Café e doces no calçadão do Centro.',int:['Gastronomia','Gastando pouco']}
-];
-const MODOS={pe:['A pé',1],carro:['Carro',3.2],uber:['Uber',3.2],pat:['Patinete',2]};
-let modo='pe',sel=new Set(),me={x:220,y:560},tab=0;
 const $=s=>document.querySelector(s);
-const ns=(t,a)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',t);for(const k in a)e.setAttribute(k,a[k]);return e};
+const INT=['Gastronomia','Cultura','Música ao vivo','Pôr do sol','Em família','Gastando pouco'];
+const MODOS={pe:['A pé',9,1.4],carro:['Carro',30,8],uber:['Uber',30,8],pat:['Patinete',18,4.2]};
+const POIS=[
+ {n:'Mercado Público',x:50,z:-20,l:.72,h:12,c:0xe8c9a0,d:'Bancas de comida, café e cuia desde 1869.',int:['Gastronomia']},
+ {n:'Usina do Gasômetro',x:-30,z:40,l:.5,h:26,c:0xd98a5f,d:'Cultura à beira do Guaíba, de frente para o pôr do sol.',ev:'Música ao vivo no pôr do sol (exemplo)',int:['Cultura','Música ao vivo','Pôr do sol']},
+ {n:'Orla do Guaíba',x:-47,z:100,l:.38,nolm:1,d:'Calçadão para caminhar, pedalar e ver o sol baixar.',int:['Pôr do sol','Em família']},
+ {n:'Theatro São Pedro',x:30,z:-80,l:.3,h:16,c:0xc9b6e4,d:'Teatro histórico ao lado da Praça da Matriz.',ev:'Espetáculo hoje às 20h (exemplo)',int:['Cultura']},
+ {n:'Praça da Matriz',x:30,z:-120,l:.2,h:20,c:0xe6d9c8,d:'Catedral, palácios e Memorial do RS.',int:['Cultura','Gastando pouco']},
+ {n:'Café da Rua da Praia',x:70,z:-60,l:.55,h:9,c:0xf0c27a,d:'Café e doces no calçadão do Centro.',int:['Gastronomia','Gastando pouco']}];
+let modo='pe',sel=new Set(),path=[],dest=null,yaw=Math.PI/2,dist=60;
+const cor=l=>l<.4?'#4FB286':l<.65?'#F2B33D':'#E0457B';
 
-// onboarding
+// ---------- cena ----------
+const stage=$('#stage'),R=new THREE.WebGLRenderer({antialias:true,alpha:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));stage.append(R.domElement);
+const S=new THREE.Scene();S.fog=new THREE.Fog(0xf2a36b,110,360);
+const cam=new THREE.PerspectiveCamera(48,1,1,700);
+S.add(new THREE.HemisphereLight(0xffe2c4,0x1c4a5a,1));
+const sun=new THREE.DirectionalLight(0xffa860,.9);sun.position.set(-150,50,40);S.add(sun);
+const M=c=>new THREE.MeshLambertMaterial({color:c});
+const box=(w,h,d,c,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);S.add(m);return m};
+// água com degradê + trilha do sol
+const cv=document.createElement('canvas');cv.width=256;cv.height=2;const g=cv.getContext('2d'),gr=g.createLinearGradient(0,0,256,0);
+gr.addColorStop(0,'#0E3B4F');gr.addColorStop(1,'#1C7C86');g.fillStyle=gr;g.fillRect(0,0,256,2);
+const water=new THREE.Mesh(new THREE.PlaneGeometry(800,900),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),fog:false}));
+water.rotation.x=-Math.PI/2;water.position.set(-450,0,0);S.add(water);
+const glint=new THREE.Mesh(new THREE.PlaneGeometry(260,26),new THREE.MeshBasicMaterial({color:0xFF8A3D,transparent:true,opacity:.45}));
+glint.rotation.x=-Math.PI/2;glint.position.set(-190,.1,60);S.add(glint);
+const land=new THREE.Mesh(new THREE.PlaneGeometry(700,700),M(0x31515c));land.rotation.x=-Math.PI/2;land.position.set(300,0,0);S.add(land);
+box(7,.4,600,0xEAF3F1,-47,.2,0);
+// quarteirões e prédios
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const PAL=[0xcfe2de,0xb9d3d0,0xe6d9c8,0xd7e3ef,0xbfcfd6];
+for(let i=0;i<12;i++)for(let j=-8;j<=8;j++){
+ const cx=-30+i*20,cz=j*20+0;
+ if(POIS.some(p=>Math.hypot(p.x-cx,p.z-cz)<11))continue;
+ if(rnd()<.1){box(14,.3,14,0x4FB286,cx,.15,cz);continue}
+ box(14,.3,14,0x8fb3b0,cx,.15,cz);
+ const k=rnd()<.5?1:2;
+ for(let b=0;b<k;b++){const w=k==1?10:6,h=4+Math.pow(rnd(),2)*(24-i);
+  box(w,h,w,PAL[Math.floor(rnd()*5)],cx+(k==2?(b?3.5:-3.5):0),h/2+.3,cz+(rnd()-.5)*2)}}
+// marcos, feixes de luz e anéis de evento
+const pulse=[];
+POIS.forEach(p=>{
+ if(!p.nolm){const m=box(9,p.h,9,p.c,p.x,p.h/2+.3,p.z);if(p.ev)m.material.emissive=new THREE.Color(0x5a2a10)}
+ const col=p.ev?0xFF4F8A:new THREE.Color(cor(p.l)).getHex();
+ const bm=new THREE.Mesh(new THREE.CylinderGeometry(p.ev?1.2:.5,p.ev?1.2:.5,70,12,1,true),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.4}));
+ bm.position.set(p.x,35,p.z);S.add(bm);
+ if(p.ev){const r=new THREE.Mesh(new THREE.RingGeometry(6,7,40),new THREE.MeshBasicMaterial({color:0xFF8A3D,transparent:true,side:2}));r.rotation.x=-Math.PI/2;r.position.set(p.x,.6,p.z);S.add(r);pulse.push(r)}
+});
+// avatar
+const av=new THREE.Group();S.add(av);av.position.set(120,0,90);
+function skin(m){while(av.children.length)av.remove(av.children[0]);
+ const add=(g,c,x,y,z)=>{const o=new THREE.Mesh(g,M(c));o.position.set(x,y,z);av.add(o)};
+ if(m=='pe'){add(new THREE.CylinderGeometry(.8,.8,2.6,12),0xFF8A3D,0,1.5,0);add(new THREE.SphereGeometry(.8,12,12),0xEAF3F1,0,3.3,0)}
+ else if(m=='pat'){add(new THREE.BoxGeometry(1,.25,3.6),0x1C7C86,0,.5,0);add(new THREE.CylinderGeometry(.12,.12,3,8),0x0E3B4F,0,2,1.5);add(new THREE.CylinderGeometry(.7,.7,2.4,12),0xFF8A3D,0,2,-.3);add(new THREE.SphereGeometry(.7,12,12),0xEAF3F1,0,3.8,-.3)}
+ else{const u=m=='uber';add(new THREE.BoxGeometry(2.8,1.3,5.6),u?0x1b1b1b:0xFF8A3D,0,1,0);add(new THREE.BoxGeometry(2.4,1,3),0xEAF3F1,0,2.1,-.2);if(u)add(new THREE.BoxGeometry(1,.35,.6),0xFFD23D,0,2.8,-.2)}
+ const ring=new THREE.Mesh(new THREE.RingGeometry(3.6,4.4,32),new THREE.MeshBasicMaterial({color:0xFF8A3D,transparent:true,opacity:.8}));ring.rotation.x=-Math.PI/2;ring.position.y=.7;av.add(ring)}
+skin('pe');
+const routeG=new THREE.Group();S.add(routeG);
+function rs(){const w=stage.clientWidth,h=stage.clientHeight;R.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}
+addEventListener('resize',rs);rs();
+
+// ---------- rótulos ----------
+POIS.forEach(p=>{const b=document.createElement('button');b.className='pin'+(p.ev?' ev':'');
+ b.innerHTML=`<i style="background:${p.ev?'#FFD23D':cor(p.l)}"></i>${p.n}`;b.onclick=()=>abrir(p);$('#lbl').append(b);p.el=b;p.v=new THREE.Vector3(p.x,p.h?p.h+8:12,p.z)});
+
+// ---------- interação ----------
+let drag=0,px=0,py=0,down=false;
+const cv2=R.domElement;
+cv2.addEventListener('pointerdown',e=>{down=true;drag=0;px=e.clientX;py=e.clientY;cv2.setPointerCapture(e.pointerId)});
+cv2.addEventListener('pointermove',e=>{if(!down)return;yaw-=(e.clientX-px)*.006;drag+=Math.abs(e.clientX-px)+Math.abs(e.clientY-py);px=e.clientX;py=e.clientY});
+cv2.addEventListener('pointerup',e=>{down=false;if(drag>8)return;
+ const r=cv2.getBoundingClientRect(),rc=new THREE.Raycaster();rc.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
+ const pt=new THREE.Vector3();if(rc.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),0),pt))go(pt.x,pt.z,null)});
+cv2.addEventListener('wheel',e=>{dist=Math.min(140,Math.max(30,dist+e.deltaY*.05))});
+const sx=v=>Math.round(v/20)*20,sz=v=>Math.round((v-10)/20)*20+10;
+function go(x,z,p){x=Math.max(-44,Math.min(250,x));z=Math.max(-170,Math.min(170,z));
+ const a=av.position,gx=sx(x),gz=sz(z);
+ path=[[sx(a.x),sz(a.z)],[gx,sz(a.z)],[gx,gz],[x,z]].map(q=>new THREE.Vector3(q[0],0,q[1]));dest=p;
+ let L=a.distanceTo(path[0]);for(let i=1;i<path.length;i++)L+=path[i].distanceTo(path[i-1]);
+ while(routeG.children.length)routeG.remove(routeG.children[0]);
+ let prev=a.clone();path.forEach(q=>{const d=q.clone().sub(prev),l=d.length();if(l>.5){const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.2,l),new THREE.MeshBasicMaterial({color:0xFF8A3D}));
+  m.position.copy(prev.clone().add(q).multiplyScalar(.5));m.position.y=.7;m.rotation.y=Math.atan2(d.x,d.z);routeG.add(m)}prev=q});
+ $('#card').classList.remove('on');$('#hint').style.display='none';return L}
+function eta(L){return Math.max(1,Math.round(L*5/MODOS[modo][2]/60))}
+function abrir(p){const pct=Math.round(p.l*100),est=p.l<.4?'Tranquilo':p.l<.65?'Movimentado':'Lotado';
+ const L=av.position.distanceTo(new THREE.Vector3(p.x,0,p.z))*1.25;
+ $('#card').innerHTML=`<h2>${p.n}</h2><div>${p.d}</div><div class="bar"><i style="width:${pct}%;background:${cor(p.l)}"></i></div>
+ <div style="font-size:13px"><b>${est}</b> agora, com ${pct}% da lotação (dado de exemplo)</div>${p.ev?`<div class="ev">Acontecendo agora: ${p.ev}</div>`:''}
+ <div class="row"><button class="btn" id="ir">Ir de ${MODOS[modo][0].toLowerCase()}, ${eta(L)} min</button><button class="btn alt" id="fx">Fechar</button></div>`;
+ $('#card').classList.add('on');$('#fx').onclick=()=>$('#card').classList.remove('on');$('#ir').onclick=()=>go(p.x+(p.nolm?3:8),p.z,p)}
+function info(t,body){$('#card').innerHTML=`<h2>${t}</h2>${body}<div class="row"><button class="btn alt" id="fx">Fechar</button></div>`;$('#card').classList.add('on');$('#fx').onclick=()=>$('#card').classList.remove('on')}
+
+// ---------- UI ----------
 INT.forEach(i=>{const b=document.createElement('button');b.textContent=i;b.setAttribute('aria-pressed','false');
- b.onclick=()=>{sel.has(i)?sel.delete(i):sel.add(i);b.setAttribute('aria-pressed',sel.has(i));};$('#chips').append(b)});
-$('#go').onclick=()=>{$('#onb').remove();draw()};
-
-// ruas e quarteirões
-for(let i=0;i<7;i++){$('#ruas').append(ns('line',{x1:150+i*40,y1:0,x2:130+i*40,y2:700}))}
-for(let j=0;j<12;j++){$('#ruas').append(ns('line',{x1:130,y1:30+j*58,x2:390,y2:30+j*58}))}
-for(let i=0;i<6;i++)for(let j=0;j<11;j++)if((i*7+j*3)%4)$('#blocos').append(ns('rect',{x:160+i*40-j*1.7,y:40+j*58,width:26,height:38,rx:4,fill:'#cfe2de'}));
-
-// modos
-Object.entries(MODOS).forEach(([k,[n]])=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('aria-pressed',k===modo);
- b.onclick=()=>{modo=k;[...$('#modes').children].forEach(c=>c.setAttribute('aria-pressed',c===b))};$('#modes').append(b)});
-
-// nav
+ b.onclick=()=>{sel.has(i)?sel.delete(i):sel.add(i);b.setAttribute('aria-pressed',sel.has(i))};$('#chips').append(b)});
+$('#go').onclick=()=>{$('#onb').remove();POIS.forEach(p=>p.el.classList.toggle('mine',p.int.some(i=>sel.has(i))))};
+Object.entries(MODOS).forEach(([k,v])=>{const b=document.createElement('button');b.textContent=v[0];b.setAttribute('aria-pressed',k==modo);
+ b.onclick=()=>{modo=k;skin(k);[...$('#modes').children].forEach(c=>c.setAttribute('aria-pressed',c==b))};$('#modes').append(b)});
 const IC=['<path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>','<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>','<path d="M4 6h16M4 12h16M4 18h10"/>','<path d="M12 21l-8-8a5 5 0 117-7 5 5 0 117 7z"/>','<circle cx="12" cy="8" r="4"/><path d="M4 21c0-5 4-7 8-7s8 2 8 7"/>'];
 ['Mapa','Agora','Roteiros','Salvos','Perfil'].forEach((n,i)=>{const b=document.createElement('button');b.innerHTML=`<svg viewBox="0 0 24 24">${IC[i]}</svg>${n}`;
- b.onclick=()=>{tab=i;[...$('#nav').children].forEach(c=>c.removeAttribute('aria-current'));b.setAttribute('aria-current','page');if(i===1)agora();else if(i)msg(n);else $('#card').classList.remove('on')};
+ b.onclick=()=>{[...$('#nav').children].forEach(c=>c.removeAttribute('aria-current'));b.setAttribute('aria-current','page');
+  if(i==0)$('#card').classList.remove('on');else if(i==1)info('Agora em Porto Alegre',POIS.filter(p=>p.ev).map(p=>`<div class="ev">${p.n}: ${p.ev}</div>`).join(''));else info(n,'<div>Tela prevista para a próxima fase do projeto.</div>')};
  if(!i)b.setAttribute('aria-current','page');$('#nav').append(b)});
 
-const match=p=>p.int.some(i=>sel.has(i));
-const cor=l=>l<.4?C.tr:l<.65?C.md:C.lt;
-function draw(){const g=$('#pois');g.innerHTML='';
- POIS.forEach(p=>{const e=ns('g',{transform:`translate(${p.x} ${p.y})`,style:'cursor:pointer',tabindex:0,role:'button','aria-label':p.n});
-  if(p.ev)e.append(ns('circle',{r:14,fill:'#FF8A3D',class:'pulse'}));
-  if(match(p))e.append(ns('circle',{r:19,fill:'none',stroke:'#FF8A3D','stroke-width':3,'stroke-dasharray':'5 4'}));
-  e.append(ns('circle',{r:13,fill:p.ev?'#E0457B':'#0E3B4F',stroke:'#fff','stroke-width':3}));
-  const t=ns('text',{y:4,'text-anchor':'middle',fill:'#fff','font-size':11,'font-weight':700});t.textContent=p.ev?'★':p.n[0];e.append(t);
-  e.onclick=ev=>{ev.stopPropagation();abrir(p)};e.onkeydown=ev=>{if(ev.key==='Enter')abrir(p)};g.append(e)})}
-
-function abrir(p){const pct=Math.round(p.l*100),est=p.l<.4?'Tranquilo':p.l<.65?'Movimentado':'Lotado';
- const dist=Math.round(Math.hypot(p.x-me.x,p.y-me.y)*1.6),min=Math.max(1,Math.round(dist/(MODOS[modo][1]*80)));
- $('#card').innerHTML=`<h2>${p.n}</h2><div>${p.d}</div>
- <div class="bar"><i style="width:${pct}%;background:${cor(p.l)}"></i></div>
- <div style="font-size:13px"><b>${est}</b> agora (${pct}% da lotação, dado de exemplo)</div>
- ${p.ev?`<div class="ev">Acontecendo agora: ${p.ev}</div>`:''}
- <div class="row"><button class="btn" id="ir">Ir ${MODOS[modo][0].toLowerCase()} · ${min} min</button><button class="btn alt" id="fx">Fechar</button></div>`;
- $('#card').classList.add('on');$('#fx').onclick=()=>$('#card').classList.remove('on');$('#ir').onclick=()=>ir(p)}
-
-function ir(p){$('#card').classList.remove('on');$('#rota').innerHTML='';
- $('#rota').append(ns('line',{x1:me.x,y1:me.y,x2:p.x,y2:p.y,stroke:'#FF8A3D','stroke-width':5,'stroke-dasharray':'2 9','stroke-linecap':'round'}));
- const a={...me},sp=MODOS[modo][1]*1.4,eu=$('#eu');
- (function f(){const dx=p.x-a.x,dy=p.y-a.y,d=Math.hypot(dx,dy);
-  if(d<sp){me={x:p.x,y:p.y};eu.setAttribute('transform',`translate(${p.x} ${p.y+22})`);$('#rota').innerHTML='';abrir(p);return}
-  a.x+=dx/d*sp;a.y+=dy/d*sp;eu.setAttribute('transform',`translate(${a.x} ${a.y})`);requestAnimationFrame(f)})()}
-
-function agora(){const l=POIS.filter(p=>p.ev);
- $('#card').innerHTML=`<h2>Agora em Porto Alegre</h2>`+l.map(p=>`<div class="ev" style="margin-top:8px">${p.n}: ${p.ev}</div>`).join('')+`<div class="row"><button class="btn alt" id="fx">Fechar</button></div>`;
- $('#card').classList.add('on');$('#fx').onclick=()=>$('#card').classList.remove('on')}
-function msg(n){$('#card').innerHTML=`<h2>${n}</h2><div>Tela prevista para a próxima fase do projeto.</div><div class="row"><button class="btn alt" id="fx">Fechar</button></div>`;
- $('#card').classList.add('on');$('#fx').onclick=()=>$('#card').classList.remove('on')}
-$('#map').onclick=()=>$('#card').classList.remove('on');
-draw();
+// ---------- loop ----------
+const look=new THREE.Vector3(120,0,90),clock=new THREE.Clock();
+(function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
+ if(path.length){const q=path[0],d=q.clone().sub(av.position),l=d.length(),s=MODOS[modo][1]*dt;
+  if(l<=s){av.position.copy(q);path.shift();if(!path.length){while(routeG.children.length)routeG.remove(routeG.children[0]);if(dest)abrir(dest)}}
+  else{av.position.add(d.multiplyScalar(s/l));av.rotation.y=Math.atan2(d.x,d.z)}}
+ pulse.forEach(r=>{const k=(t*.6)%1;r.scale.setScalar(.6+k*2.2);r.material.opacity=1-k});
+ const zd={pe:50,carro:78,uber:78,pat:62}[modo];dist+=((drag>8||down?dist:zd)-dist)*.02;
+ look.lerp(av.position,.08);const pit=.9,o=new THREE.Vector3(Math.sin(yaw)*Math.cos(pit),Math.sin(pit),Math.cos(yaw)*Math.cos(pit)).multiplyScalar(dist);
+ cam.position.copy(look).add(o);cam.lookAt(look.x,3,look.z);
+ const w=stage.clientWidth,h=stage.clientHeight;
+ POIS.forEach(p=>{const v=p.v.clone().project(cam);const hide=v.z>1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1;
+  p.el.style.display=hide?'none':'flex';if(!hide)p.el.style.transform=`translate(${(v.x*.5+.5)*w}px,${(-v.y*.5+.5)*h}px) translate(-50%,-100%)`});
+ R.render(S,cam)})();
 </script></body></html>
